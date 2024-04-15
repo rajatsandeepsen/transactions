@@ -1,7 +1,9 @@
 import { relations, sql } from "drizzle-orm";
 import {
+  bigint,
   index,
   integer,
+  pgEnum,
   pgTableCreator,
   primaryKey,
   serial,
@@ -9,7 +11,7 @@ import {
   timestamp,
   varchar,
 } from "drizzle-orm/pg-core";
-import { type AdapterAccount } from "next-auth/adapters";
+import type { AdapterAccount } from "next-auth/adapters";
 
 /**
  * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
@@ -17,30 +19,40 @@ import { type AdapterAccount } from "next-auth/adapters";
  *
  * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
  */
-export const createTable = pgTableCreator((name) => `transactions_${name}`);
-
-export const posts = createTable(
-  "post",
+export const createTable = pgTableCreator((name) => `${name}_tnx`);
+export const statusEnum = pgEnum('status', ['initiated', 'success', 'failed']);
+export const transactions = createTable(
+  "transaction",
   {
-    id: serial("id").primaryKey(),
-    name: varchar("name", { length: 256 }),
-    createdById: varchar("createdById", { length: 255 })
-      .notNull()
-      .references(() => users.id),
+    id: varchar("id", { length: 255 }).notNull().primaryKey(),
+    amount: integer('amount').default(0).notNull(),
+    status: statusEnum('status').default('initiated').notNull(),
+    remark: text('remark'),
+    fromNumber: bigint("fromNumber", {
+      mode: "number"
+    })
+      .notNull(),
+      // .references(() => users.number),
+    toNumber: bigint("toNumber", {
+      mode: "number"
+    })
+      .notNull(),
+      // .references(() => users.number),
+    name: varchar("name", { length: 255 }),
     createdAt: timestamp("created_at")
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
-    updatedAt: timestamp("updatedAt"),
   },
-  (example) => ({
-    createdByIdIdx: index("createdById_idx").on(example.createdById),
-    nameIndex: index("name_idx").on(example.name),
-  })
+  // (example) => ({
+  //   fromIdx: index("from_idx").on(example.fromNumber),
+  //   toIdx: index("to_idx").on(example.toNumber),
+  // })
 );
 
 export const users = createTable("user", {
   id: varchar("id", { length: 255 }).notNull().primaryKey(),
   name: varchar("name", { length: 255 }),
+  number: bigint('number', {mode: "number"}).default(0).notNull(),
   email: varchar("email", { length: 255 }).notNull(),
   emailVerified: timestamp("emailVerified", {
     mode: "date",
