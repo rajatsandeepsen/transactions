@@ -9,5 +9,6 @@ export const statusZod = transactionsZod.pick({
     status: true
 })
 
-export const numberZod = z.number().int().min(999999999).max(9999999999);
+// export const numberZod = z.number().int().min(999999999).max(9999999999);
+export const numberZod = z.number();
 export const amountZod = z.number().int().min(1);

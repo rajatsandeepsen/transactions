@@ -1,7 +1,6 @@
-import { TnxRouter } from "~/server/api/routers/tnx";
+// import { TnxRouter } from "~/server/api/routers/tnx";
 import { type TRPCContext, createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
-import { chainRouter } from "./routers/chain";
-
+import {execute} from "./routers/execute";
 
 /**
  * This is the primary router for your server.
@@ -9,8 +8,7 @@ import { chainRouter } from "./routers/chain";
  * All routers added in /api/routers should be manually added here.
  */
 export const appRouter = createTRPCRouter({
-  tnx: TnxRouter,
-  chain: chainRouter
+  execute: execute
 });
 
 // export type definition of API
