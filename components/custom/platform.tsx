@@ -16,6 +16,7 @@ import { api } from "~/trpc/react"
 import {Actions} from "~/components/actions"
 import { TimeLine } from "../actions/timeline"
 import { StateManagement } from "~/lib/state"
+import { Fragment } from "react"
 
 type FormEvent<T extends string> = React.FormEvent<HTMLFormElement> & {
     target: {
@@ -41,11 +42,11 @@ const Platform = () => {
 
             {(data ? data : dataRe)?.executions.map((item) => {
                 const key = item.key === "unknown" ? "unavailableAction" : item.key as keyof typeof Actions 
-                const Component = Actions[key]
+                const Component = item ? Actions[key] : Fragment
                 return (
                     <CardContent className="flex flex-row gap-2 py-0">
                         <TimeLine i={item.iteration} error={item.error} />
-                        {item && <Component data={item as unknown as typeof Component["arguments"]["data"]} />}
+                        <Component data={item as unknown as typeof Component["arguments"]["data"]} />
                     </CardContent>
                 )
             }

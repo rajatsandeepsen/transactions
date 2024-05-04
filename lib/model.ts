@@ -18,6 +18,7 @@ export const model = new TogetherAI({
 	modelName: "meta-llama/Llama-3-8b-chat-hf",
 	// modelName: "mistralai/Mixtral-8x7B-Instruct-v0.1",
 	apiKey: process.env.API_KEY,
+	maxTokens: 50,
 });
 
 type FuncParam = {
@@ -140,10 +141,7 @@ export const init = implementChain(Schema, UserState, materials, {
 					.select()
 					.from(transactions)
 					.where(
-						and(
 							eq(transactions.toNumber, number),
-							eq(transactions.toNumber, 1882),
-						),
 					)
 					.orderBy(desc(transactions.createdAt));
 

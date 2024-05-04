@@ -53,10 +53,10 @@ export type ExtraParams = {
 export const Schema = {
 	findSum: z
 		.function()
-		.describe("When user want to sum his transaction history from previous execution, always set transaction:'unknown'")
+		.describe("When user want to sum his transaction history from previous execution, always set transactions:'unknown' if user want to 'sent that amount'")
 		.args(
 			z.object({
-				transactions: z.any()
+				transactions: z.any().or(z.enum(["unknown"]))
 			}),
 		)
 		.returns(
@@ -88,13 +88,13 @@ export const Schema = {
 	createTransaction: z
 		.function()
 		.describe(
-			"When user wants to create or initialize a transaction, to continue in execution order.",
+			"When user wants to create or initialize a transaction, to continue in execution order. Set amount:'unknown', if user dont specify numberical amount while creating transaction. Also never set amount:0",
 		)
 		.args(
 			z.object({
 				name: z.string().min(1),
 				number: numberZod,
-				amount: amountZod,
+				amount: amountZod.or(z.enum(["unknown"])),
 			}),
 		)
 		.returns(status),
