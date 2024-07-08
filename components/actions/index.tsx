@@ -20,13 +20,13 @@ import { Progress } from "~/components/ui/progress"
 import { Button } from "../ui/button";
 import { StateManagement, permissionDrawerState } from "~/lib/state";
 
-const findSum: AFC<"findSum"> = ({ data }) => {
-    const { result, error } = data
+const calculateMaths: AFC<"calculateMaths"> = ({ data }) => {
+    const { result, error, value } = data
 
     return (
         <div>
             <CardHeader className="px-7">
-                <CardTitle>Total Sum</CardTitle>
+                <CardTitle>Result of {value.operation} {value.value && `with ${value.value}`}</CardTitle>
                 <CardTitle className="text-4xl">${result?.amount}</CardTitle>
                 <CardDescription>
                     {error?.message}
@@ -146,7 +146,9 @@ const getTransactions: AFC<"getTransactions"> = ({ data }) => {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>User</TableHead>
+                            <TableHead>-</TableHead>
+                            <TableHead className="hidden sm:table-cell">From</TableHead>
+                            <TableHead className="hidden sm:table-cell">To</TableHead>
                             <TableHead className="hidden sm:table-cell">Remark</TableHead>
                             <TableHead className="hidden sm:table-cell">Status</TableHead>
                             <TableHead className="hidden md:table-cell">Date</TableHead>
@@ -159,10 +161,9 @@ const getTransactions: AFC<"getTransactions"> = ({ data }) => {
                             <TableRow className="bg-accent">
                                 <TableCell>
                                     <div className="font-medium">{transaction.name}</div>
-                                    <div className="hidden text-sm text-muted-foreground md:inline">
-                                        {transaction.toNumber}
-                                    </div>
                                 </TableCell>
+                                <TableCell className="hidden sm:table-cell">{transaction.fromNumber}</TableCell>
+                                <TableCell className="hidden sm:table-cell">{transaction.toNumber}</TableCell>
                                 <TableCell className="hidden sm:table-cell">{transaction.remark}</TableCell>
                                 <TableCell className="hidden sm:table-cell">
                                     <Badge className="text-xs" variant="secondary">
@@ -186,6 +187,6 @@ export const Actions = {
     unavailableAction,
     changeUsersDetails,
     getBalance,
-    findSum,
+    calculateMaths,
 
 }

@@ -17,7 +17,7 @@ export default async function Home() {
   return (
     <>
       <DrawerDialogDemo />
-      <Tabs defaultValue="login" className="w-[600px]">
+      <Tabs defaultValue="login" className="min-w-[600px]">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="login">Profile</TabsTrigger>
           <TabsTrigger disabled={!session?.user} value="welcome">Welcome</TabsTrigger>

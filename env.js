@@ -8,6 +8,7 @@ export const env = createEnv({
 	 */
 	server: {
 		API_KEY: z.string(),
+		GROQ_API_KEY: z.string(),
 		DATABASE_URL: z.string().url(),
 		NODE_ENV: z
 			.enum(["development", "test", "production"])
@@ -46,6 +47,7 @@ export const env = createEnv({
 	runtimeEnv: {
 		DATABASE_URL: process.env.DATABASE_URL,
 		API_KEY: process.env.API_KEY,
+		GROQ_API_KEY: process.env.GROQ_API_KEY,
 		NODE_ENV: process.env.NODE_ENV,
 		NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
 		NEXTAUTH_URL: process.env.NEXTAUTH_URL,

@@ -13,6 +13,7 @@ import { Schema, UserState } from "./schema";
 import { numberZod, transactionsZod } from "./validation";
 import { z } from "zod";
 import { decrement, increment } from "~/server/db/util";
+import { db } from "~/server/db";
 
 export const model = new TogetherAI({
 	modelName: "meta-llama/Llama-3-8b-chat-hf",
@@ -29,12 +30,45 @@ type FuncParam = {
 export const materials = getZodChainedCombined(Schema, UserState);
 export const init = implementChain(Schema, UserState, materials, {
 	functions: (_extra: FuncParam, state, rawState) => ({
-		findSum: async ({ transactions }) => {
+		calculateMaths: async ({ transactions, operation, value }) => {
 			const validated = z.array(transactionsZod).parse(transactions);
+
 			const totalAmount = validated.reduce(
 				(total, transaction) => total + transaction.amount,
 				0,
 			);
+
+			if (operation === "sum") {
+				return {
+					amount: totalAmount,
+				};
+			}
+
+			if (operation === "avg") {
+				return {
+					amount: totalAmount / validated.length,
+				};
+			}
+
+			if (operation === "minus") {
+				return {
+					amount: totalAmount - (value ?? 0),
+				};
+			}
+
+			if (operation === "divide") {
+				return {
+					amount: totalAmount / (value ?? 1),
+				};
+			}
+
+			if (operation === "percentage") {
+				return {
+					amount: (totalAmount * (value ?? 100)) / 100,
+				};
+			}
+
+
 			return {
 				amount: totalAmount,
 			};
@@ -65,17 +99,29 @@ export const init = implementChain(Schema, UserState, materials, {
 
 			return {
 				status: "success",
-				message: `Successfully changed your ${name ? `name to ${name}` : ""}${
-					name && number ? " & " : ""
-				}${number ? `number to ${number}` : ""}`,
+				message: `Successfully changed your ${name ? `name to ${name}` : ""}${name && number ? " & " : ""
+					}${number ? `number to ${number}` : ""}`,
 			};
 		},
 		createTransaction: async ({ name, number, amount }) => {
 			if (!_extra.ctx.session?.user) throw new Error("User not logged in");
 
-			const fromNumber = numberZod.parse(
-				_extra.ctx.session.user.number ?? 1882,
-			);
+			const { number: fromNumber } = await db.query.users.findFirst({
+				where: eq(users.id, _extra.ctx.session.user.id)
+			}) ?? { number: 1882 }
+
+			if (amount === "unknown") throw new Error("Amount is not specified");
+
+			const getNumber = async () => {
+				const user = await db.query.users.findFirst({
+					where: ilike(users.name, `%${name}%`),
+				})
+
+				if (!user) throw new Error("User not found");
+				return user.number
+			}
+
+			const newNumber = number ? number : await getNumber()
 
 			const id = await _extra.ctx.db.transaction(async (tx) => {
 				await tx
@@ -83,7 +129,7 @@ export const init = implementChain(Schema, UserState, materials, {
 					.set({
 						amount: increment(users.amount, amount),
 					})
-					.where(eq(users.number, number));
+					.where(eq(users.number, newNumber));
 
 				await tx
 					.update(users)
@@ -94,9 +140,9 @@ export const init = implementChain(Schema, UserState, materials, {
 				const id = uuid()
 
 				await tx.insert(transactions).values({
-					name: name,
+					name: `${_extra.ctx.session?.user.name ?? ""} ${name}`,
 					fromNumber,
-					toNumber: number,
+					toNumber: newNumber,
 					amount: amount,
 					id,
 				})
@@ -112,9 +158,10 @@ export const init = implementChain(Schema, UserState, materials, {
 		getTransactions: async (data) => {
 			if (!_extra.ctx.session) throw new Error("User not logged in");
 
-			const fromNumber = numberZod.parse(
-				_extra.ctx.session.user?.number ?? 1882,
-			);
+			const { number: fromNumber } = await db.query.users.findFirst({
+				where: eq(users.id, _extra.ctx.session.user.id)
+			}) ?? { number: 1882 }
+
 			if (
 				!data ||
 				(Object.keys(data).length === 0 && data.constructor === Object)
@@ -141,7 +188,7 @@ export const init = implementChain(Schema, UserState, materials, {
 					.select()
 					.from(transactions)
 					.where(
-							eq(transactions.toNumber, number),
+						eq(transactions.toNumber, number),
 					)
 					.orderBy(desc(transactions.createdAt));
 
@@ -160,7 +207,10 @@ export const init = implementChain(Schema, UserState, materials, {
 					.where(
 						and(
 							ilike(transactions.name, `%${name}%`),
-							eq(transactions.toNumber, 1882),
+							or(
+								eq(transactions.toNumber, fromNumber),
+								eq(transactions.fromNumber, fromNumber),
+							),
 						),
 					)
 					.orderBy(desc(transactions.createdAt));
@@ -193,10 +243,15 @@ export const init = implementChain(Schema, UserState, materials, {
 			],
 		},
 		{
-			Input: "Get my entire transaction history",
+			Input: "Get my entire transaction history and find 10 percentage of it",
 			Output: [
 				{
 					getTransactions: {},
+					calculateMaths: {
+						operation: "percentage",
+						value: 10,
+						transactions: "unknown"
+					}
 				},
 			],
 		},

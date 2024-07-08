@@ -51,11 +51,13 @@ export type ExtraParams = {
 };
 
 export const Schema = {
-	findSum: z
+	calculateMaths: z
 		.function()
-		.describe("When user want to sum his transaction history from previous execution, always set transactions:'unknown' if user want to 'sent that amount'")
+		.describe("When user want to sum/avg or minus/divide/percentage with a number, in his transaction history from previous execution, always set transactions:'unknown' if user want to 'sent that amount'")
 		.args(
 			z.object({
+				operation: z.enum(["sum", "avg", "minus", "divide", "percentage"]),
+				value: z.number().optional().describe("value is the number to perform operation with"),
 				transactions: z.any().or(z.enum(["unknown"]))
 			}),
 		)
@@ -93,7 +95,7 @@ export const Schema = {
 		.args(
 			z.object({
 				name: z.string().min(1),
-				number: numberZod,
+				number: numberZod.optional(),
 				amount: amountZod.or(z.enum(["unknown"])),
 			}),
 		)
@@ -108,7 +110,7 @@ export const Schema = {
 				.object({
 					name: z.string().min(1).optional(),
 					number: numberZod.optional()
-				}),
+				}).optional(),
 		)
 		.returns(
 			z.object({
