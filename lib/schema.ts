@@ -94,7 +94,7 @@ export const Schema = {
 		)
 		.args(
 			z.object({
-				name: z.string().min(1),
+				name: z.string().optional(),
 				number: numberZod.optional(),
 				amount: amountZod.or(z.enum(["unknown"])),
 			}),

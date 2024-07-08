@@ -19,7 +19,7 @@ export const model = new TogetherAI({
 	modelName: "meta-llama/Llama-3-8b-chat-hf",
 	// modelName: "mistralai/Mixtral-8x7B-Instruct-v0.1",
 	apiKey: process.env.API_KEY,
-	maxTokens: 50,
+	maxTokens: 70,
 });
 
 type FuncParam = {
@@ -46,7 +46,7 @@ export const init = implementChain(Schema, UserState, materials, {
 
 			if (operation === "avg") {
 				return {
-					amount: totalAmount / validated.length,
+					amount: Math.floor(totalAmount / validated.length),
 				};
 			}
 
@@ -58,13 +58,13 @@ export const init = implementChain(Schema, UserState, materials, {
 
 			if (operation === "divide") {
 				return {
-					amount: totalAmount / (value ?? 1),
+					amount: Math.floor(totalAmount / (value ?? 1)),
 				};
 			}
 
 			if (operation === "percentage") {
 				return {
-					amount: (totalAmount * (value ?? 100)) / 100,
+					amount: Math.floor((totalAmount * (value ?? 100)) / 100),
 				};
 			}
 
@@ -114,7 +114,7 @@ export const init = implementChain(Schema, UserState, materials, {
 
 			const getNumber = async () => {
 				const user = await db.query.users.findFirst({
-					where: ilike(users.name, `%${name}%`),
+					where: ilike(users.name, `%${name ?? "unknown"}%`),
 				})
 
 				if (!user) throw new Error("User not found");
@@ -140,7 +140,7 @@ export const init = implementChain(Schema, UserState, materials, {
 				const id = uuid()
 
 				await tx.insert(transactions).values({
-					name: `${_extra.ctx.session?.user.name ?? ""} ${name}`,
+					name: `${_extra.ctx.session?.user.name ?? ""} ${name ?? "unknown"}`,
 					fromNumber,
 					toNumber: newNumber,
 					amount: amount,
